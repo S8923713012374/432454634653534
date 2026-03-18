@@ -50,7 +50,7 @@
       "description": "Jogos curados diretamente pela equipe da Ecológica Verde com foco em qualidade, compatibilidade e segurança. Fontes verificadas e organizadas manualmente, sem nenhuma utilização de Web Scraping.",
       "status": "verified",
       "lastUpdated": "",
-      "url": "https://588f38a9.ecologica2verde.pages.dev/",
+      "url": "https://ecologica2verde.pages.dev/",
       "csvColumns": ["Nome", "Version", "Build", "URL", "Data da Postagem"],
       "pros": [
         "Jogos incluídos pela Comunidade",
@@ -125,10 +125,31 @@
         "Necessário Steam ou da Epic Games aberto",
         "Foco do idioma em Russo"
       ]
+    },
+    {
+      "id": "insaneramzes",
+      "name": "InsaneRamZes",
+      "shortName": "<a href=\"https://rutracker.me/forum/viewtopic.php?t=6452965\" target=\"_blank\" style=\"color: #4caf50; text-decoration: none; font-weight: 500;\">Donate link</a>",
+      "filename": "InsaneRamZes",
+      "description": "Releases em Game Folder do conhecido releaser do CS.RIN.RU e RuTracker. Instalação simples e direta.",
+      "status": "verified",
+      "lastUpdated": "",
+      "url": "https://insaneramzes.pages.dev/",
+      "csvColumns": ["Nome", "Version", "Tamanho do Arquivo", "URL", "Data de Postagem"],
+      "pros": [
+        "Releases em <b>[Game folder]</b>, sem instalador",
+        "Releaser conhecido do CS.RIN.RU e do RuTracker",
+        "Instalação simples"
+      ],
+      "cons": [
+        "Catálogo pequeno de jogos",
+        "Velocidade de download pode ser lenta",
+        "Jogos dublados as vezes só com legendas PT-BR"
+      ]
     }
   ],
   "stats": {
-    "totalSources": 6,
+    "totalSources": 7,
     "totalGames": 0,
     "lastUpdated": "2024-01-15"
   }

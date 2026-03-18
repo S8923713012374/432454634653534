@@ -11,7 +11,8 @@ const CONFIG = {
         'ecologica': { type: 'repacks', icon: 'fa-leaf' },
         'fitgirl': { type: 'repacks', icon: 'fa-gamepad' },
         'gog': { type: 'gog', icon: 'fa-gamepad' },
-        'onlinefix': { type: 'online', icon: 'fa-wifi' }
+        'onlinefix': { type: 'online', icon: 'fa-wifi' },
+        'insaneramzes': { type: 'folder', icon: 'fa-gamepad' }
     },
     
     sourceUrls: {
@@ -20,7 +21,8 @@ const CONFIG = {
         'ecologica': 'https://ecologica2verde.pages.dev/',
         'fitgirl': 'https://ecofitgirl.pages.dev/',
         'gog': 'https://freepcgoggames.pages.dev/',
-        'onlinefix': 'https://onlinefixme.pages.dev/'
+        'onlinefix': 'https://onlinefixme.pages.dev/',
+        'insaneramzes': 'https://insaneramzes.pages.dev/'
     },
     
     sourceSafetyLinks: {
@@ -29,7 +31,8 @@ const CONFIG = {
         'ecologica': 'https://www.urlvoid.com/scan/ecologica2verde.pages.dev/',
         'fitgirl': 'https://www.urlvoid.com/scan/fitgirl-repacks.site/',
         'gog': 'https://www.urlvoid.com/scan/freegogpcgames.com/',
-        'onlinefix': 'https://www.urlvoid.com/scan/online-fix.me/'
+        'onlinefix': 'https://www.urlvoid.com/scan/online-fix.me/',
+        'insaneramzes': 'https://www.urlvoid.com/scan/rutracker.me/'
     },
     
     recommendations: {
@@ -38,7 +41,8 @@ const CONFIG = {
         'ecologica': 4,
         'fitgirl': 5,
         'gog': 4,
-        'onlinefix': 5
+        'onlinefix': 5,
+        'insaneramzes': 4
     },
     
     guides: [
@@ -196,7 +200,8 @@ let state = {
     currentSection: 'sources',
     filtersInitialized: false,
     isChangingSection: false,
-    gameCounts: {}
+    gameCounts: {},
+    totalGames: 0
 };
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -220,6 +225,20 @@ async function initializeApp() {
         const gameCountsData = await gameCountsResponse.json();
         
         state.gameCounts = gameCountsData;
+        
+        // Calcula o total de jogos somando todos os valores dos catálogos
+        // Ignora as propriedades que não são catálogos (totalGames, lastUpdated)
+        state.totalGames = 0;
+        for (const key in gameCountsData) {
+            if (key !== 'totalGames' && key !== 'lastUpdated' && typeof gameCountsData[key] === 'number') {
+                state.totalGames += gameCountsData[key];
+            }
+        }
+        
+        const catalogStats = document.getElementById('catalogStats');
+        if (catalogStats) {
+            catalogStats.textContent = `${sourcesData.sources.length} catálogos indexados | Total de Jogos: ${state.totalGames.toLocaleString('pt-BR')}`;
+        }
         
         state.sources = sourcesData.sources.map(source => ({
             ...source,
@@ -395,7 +414,7 @@ function applyFilters() {
     
     if (state.filters.type !== 'all') {
         if (state.filters.type === 'folder') {
-            filtered = filtered.filter(source => source.id === 'byxatab');
+            filtered = filtered.filter(source => source.id === 'byxatab' || source.id === 'insaneramzes');
         } else if (state.filters.type === 'repacks') {
             filtered = filtered.filter(source => 
                 source.id === 'fitgirl' || 
