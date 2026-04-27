@@ -839,6 +839,7 @@ function setupGameSearch() {
     const searchInput = document.getElementById('gameSearchInput');
     const searchBtn = document.getElementById('searchGameBtn');
     const resultsContainer = document.getElementById('searchResults');
+    const modalBody = document.getElementById('modalBody');
 
     function getCatalogsFromSourceUrls() {
         const catalogs = [];
@@ -894,7 +895,15 @@ function setupGameSearch() {
     if (openBtn) {
         openBtn.addEventListener('click', () => {
             modal.style.display = 'flex';
-            searchInput.focus();
+            if (modalBody) {
+                modalBody.scrollTop = 0;
+            }
+            if (resultsContainer) {
+                resultsContainer.scrollTop = 0;
+            }
+            setTimeout(() => {
+                searchInput.focus();
+            }, 100);
         });
     }
 
@@ -907,6 +916,9 @@ function setupGameSearch() {
                 <p>Digite o nome de um jogo para ver em qual(is) catálogo(s) ele está</p>
             </div>
         `;
+        if (modalBody) {
+            modalBody.scrollTop = 0;
+        }
     }
 
     if (closeBtn) {
@@ -1008,6 +1020,10 @@ function setupGameSearch() {
             </div>
         `;
         
+        if (modalBody) {
+            modalBody.scrollTop = 0;
+        }
+        
         const searchPromises = catalogs.map(catalog => 
             searchInCatalog(catalog, gameName).then(matches => ({ catalog, matches }))
         );
@@ -1034,20 +1050,41 @@ function setupGameSearch() {
                 <span>Encontrado em ${catalogsWithMatches.length} catálogo(s)</span>
             </div>
             <div class="catalogs-list">
-                ${catalogsWithMatches.map(({ catalog, matches }) => `
-                    <div class="catalog-result">
-                        <div class="catalog-result-header">
+                ${catalogsWithMatches.map(({ catalog, matches }, index) => `
+                    <div class="catalog-result" data-catalog-id="${catalog.id}">
+                        <div class="catalog-result-header" data-catalog-id="${catalog.id}">
                             <i class="fas ${catalog.icon}"></i>
                             <strong>${catalog.name}</strong>
                             <span class="match-count">${matches.length} jogo(s)</span>
+                            <i class="fas fa-chevron-down dropdown-icon" data-catalog-id="${catalog.id}"></i>
                         </div>
-                        <ul class="games-list">
+                        <ul class="games-list" id="games-list-${catalog.id}">
                             ${matches.map(game => `<li><i class="fas fa-gamepad"></i> ${escapeHtml(game)}</li>`).join('')}
                         </ul>
                     </div>
                 `).join('')}
             </div>
         `;
+        
+        document.querySelectorAll('.catalog-result-header').forEach(header => {
+            header.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const catalogId = header.dataset.catalogId;
+                const gamesList = document.getElementById(`games-list-${catalogId}`);
+                const dropdownIcon = header.querySelector('.dropdown-icon');
+                
+                if (gamesList) {
+                    gamesList.classList.toggle('collapsed');
+                    if (dropdownIcon) {
+                        if (gamesList.classList.contains('collapsed')) {
+                            dropdownIcon.style.transform = 'rotate(-90deg)';
+                        } else {
+                            dropdownIcon.style.transform = 'rotate(0deg)';
+                        }
+                    }
+                }
+            });
+        });
     }
 
     function escapeHtml(text) {
