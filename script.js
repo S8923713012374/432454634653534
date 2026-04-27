@@ -16,13 +16,13 @@ const CONFIG = {
     },
     
     sourceUrls: {
-        'byxatab': 'https://a2907dba.byxatab.pages.dev',
-        'dodi': 'https://f009e3ff.dodi.pages.dev',
+        'byxatab': 'https://184cc280.byxatab.pages.dev',
+        'dodi': 'https://3c31bfde.dodi.pages.dev',
         'ecologica': 'https://23e0beb4.ecologica2verde.pages.dev',
-        'fitgirl': 'https://36f49a2c.ecofitgirl.pages.dev',
-        'gog': 'https://08dd0ccb.freepcgoggames.pages.dev',
-        'onlinefix': 'https://9f786bb6.onlinefixme.pages.dev',
-        'insaneramzes': 'https://64e2882c.insaneramzes.pages.dev'
+        'fitgirl': 'https://89e9f0cb.ecofitgirl.pages.dev',
+        'gog': 'https://5f64ab30.freepcgoggames.pages.dev',
+        'onlinefix': 'https://3c07e5ca.onlinefixme.pages.dev',
+        'insaneramzes': 'https://d91d90ca.insaneramzes.pages.dev'
     },
     
     sourceSafetyLinks: {
@@ -212,6 +212,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadUtilities();
     setupCardEffects();
     updateScrollbarVisibility();
+    setupGameSearch();
 });
 
 async function initializeApp() {
@@ -226,8 +227,6 @@ async function initializeApp() {
         
         state.gameCounts = gameCountsData;
         
-        // Calcula o total de jogos somando todos os valores dos catálogos
-        // Ignora as propriedades que não são catálogos (totalGames, lastUpdated)
         state.totalGames = 0;
         for (const key in gameCountsData) {
             if (key !== 'totalGames' && key !== 'lastUpdated' && typeof gameCountsData[key] === 'number') {
@@ -831,6 +830,223 @@ function showNotification(title, message, type = 'info') {
             notification.remove();
         }
     }, 5000);
+}
+
+function setupGameSearch() {
+    const SEARCH_CONFIG = {
+        catalogs: [
+            {
+                id: 'byxatab',
+                name: 'ByXATAB',
+                csvUrl: 'https://byxatab.pages.dev/ByXATAB.csv',
+                icon: 'fa-gamepad'
+            },
+            {
+                id: 'dodi',
+                name: 'DODI Repacks',
+                csvUrl: 'https://dodi.pages.dev/DODI%20Repack.csv',
+                icon: 'fa-gamepad'
+            },
+            {
+                id: 'ecologica',
+                name: 'Ecológica Verde',
+                csvUrl: 'https://ecologica2verde.pages.dev/Ecol%C3%B3gica%20Verde.csv',
+                icon: 'fa-leaf'
+            },
+            {
+                id: 'fitgirl',
+                name: 'FitGirl Repacks',
+                csvUrl: 'https://ecofitgirl.pages.dev/FitGirl%20Repack.csv',
+                icon: 'fa-gamepad'
+            },
+            {
+                id: 'gog',
+                name: 'Free PC GOG Games',
+                csvUrl: 'https://freepcgoggames.pages.dev/FreePCGOGGames.csv',
+                icon: 'fa-gamepad'
+            },
+            {
+                id: 'onlinefix',
+                name: 'OnlineFixMe',
+                csvUrl: 'https://onlinefixme.pages.dev/OnlineFixMe.csv',
+                icon: 'fa-wifi'
+            },
+            {
+                id: 'insaneramzes',
+                name: 'InsaneRamZes',
+                csvUrl: 'https://insaneramzes.pages.dev/InsaneRamZes.csv',
+                icon: 'fa-gamepad'
+            }
+        ]
+    };
+
+    const modal = document.getElementById('gameSearchModal');
+    const openBtn = document.getElementById('openSearchModalBtn');
+    const closeBtn = document.getElementById('closeModalBtn');
+    const searchInput = document.getElementById('gameSearchInput');
+    const searchBtn = document.getElementById('searchGameBtn');
+    const resultsContainer = document.getElementById('searchResults');
+
+    if (openBtn) {
+        openBtn.addEventListener('click', () => {
+            modal.style.display = 'flex';
+            searchInput.focus();
+        });
+    }
+
+    function closeSearchModal() {
+        modal.style.display = 'none';
+        searchInput.value = '';
+        resultsContainer.innerHTML = `
+            <div class="search-placeholder">
+                <i class="fas fa-gamepad"></i>
+                <p>Digite o nome de um jogo para ver em qual(is) catálogo(s) ele está</p>
+            </div>
+        `;
+    }
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeSearchModal);
+    }
+
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeSearchModal();
+        });
+    }
+
+    async function searchInCatalog(catalog, gameName) {
+        try {
+            const response = await fetch(catalog.csvUrl);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            
+            const csvText = await response.text();
+            
+            const lines = csvText.split('\n');
+            const headers = lines[0].split(',');
+            
+            const nameColumnIndex = headers.findIndex(h => 
+                h.toLowerCase().includes('nome') || 
+                h.toLowerCase().includes('name') ||
+                h.toLowerCase().includes('game')
+            );
+            
+            if (nameColumnIndex === -1) return [];
+            
+            const matches = [];
+            const searchTerm = gameName.toLowerCase();
+            
+            for (let i = 1; i < lines.length; i++) {
+                const line = lines[i].trim();
+                if (!line) continue;
+                
+                let columns;
+                if (line.includes('"')) {
+                    const regex = /"([^"]*)"|([^,]+)/g;
+                    columns = [];
+                    let match;
+                    while ((match = regex.exec(line)) !== null) {
+                        columns.push(match[1] || match[2] || '');
+                    }
+                } else {
+                    columns = line.split(',');
+                }
+                
+                const gameName_raw = columns[nameColumnIndex] || '';
+                const gameName_clean = gameName_raw.replace(/^"|"$/g, '').trim();
+                
+                if (gameName_clean.toLowerCase().includes(searchTerm)) {
+                    matches.push(gameName_clean);
+                }
+                
+                if (matches.length >= 5) break;
+            }
+            
+            return matches;
+            
+        } catch (error) {
+            console.error(`Erro ao buscar em ${catalog.name}:`, error);
+            return [];
+        }
+    }
+
+    async function performSearch() {
+        const gameName = searchInput.value.trim();
+        
+        if (!gameName) {
+            resultsContainer.innerHTML = `
+                <div class="search-placeholder">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>Digite o nome de um jogo para buscar</p>
+                </div>
+            `;
+            return;
+        }
+        
+        resultsContainer.innerHTML = `
+            <div class="search-loading">
+                <div class="loading-spinner-small"></div>
+                <p>Buscando em ${SEARCH_CONFIG.catalogs.length} catálogos...</p>
+            </div>
+        `;
+        
+        const searchPromises = SEARCH_CONFIG.catalogs.map(catalog => 
+            searchInCatalog(catalog, gameName).then(matches => ({ catalog, matches }))
+        );
+        
+        const results = await Promise.all(searchPromises);
+        
+        const catalogsWithMatches = results.filter(r => r.matches.length > 0);
+        
+        if (catalogsWithMatches.length === 0) {
+            resultsContainer.innerHTML = `
+                <div class="search-no-results">
+                    <i class="fas fa-face-frown"></i>
+                    <h4>Nenhum jogo encontrado</h4>
+                    <p>Não encontramos "${gameName}" em nenhum catálogo.</p>
+                    <p class="search-tip">Dica: Tente usar apenas parte do nome ou verifique a ortografia.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        resultsContainer.innerHTML = `
+            <div class="search-results-header">
+                <i class="fas fa-check-circle"></i>
+                <span>Encontrado em ${catalogsWithMatches.length} catálogo(s)</span>
+            </div>
+            <div class="catalogs-list">
+                ${catalogsWithMatches.map(({ catalog, matches }) => `
+                    <div class="catalog-result">
+                        <div class="catalog-result-header">
+                            <i class="fas ${catalog.icon}"></i>
+                            <strong>${catalog.name}</strong>
+                            <span class="match-count">${matches.length} jogo(s)</span>
+                        </div>
+                        <ul class="games-list">
+                            ${matches.map(game => `<li><i class="fas fa-gamepad"></i> ${escapeHtml(game)}</li>`).join('')}
+                        </ul>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    if (searchBtn) {
+        searchBtn.addEventListener('click', performSearch);
+    }
+
+    if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') performSearch();
+        });
+    }
 }
 
 window.handleAccessSource = handleAccessSource;
