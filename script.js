@@ -833,59 +833,63 @@ function showNotification(title, message, type = 'info') {
 }
 
 function setupGameSearch() {
-    const SEARCH_CONFIG = {
-        catalogs: [
-            {
-                id: 'byxatab',
-                name: 'ByXATAB',
-                csvUrl: 'https://byxatab.pages.dev/ByXATAB.csv.gz',
-                icon: 'fa-gamepad'
-            },
-            {
-                id: 'dodi',
-                name: 'DODI Repacks',
-                csvUrl: 'https://dodi.pages.dev/DODI%20Repack.csv.gz',
-                icon: 'fa-gamepad'
-            },
-            {
-                id: 'ecologica',
-                name: 'Ecológica Verde',
-                csvUrl: 'https://ecologica2verde.pages.dev/Ecol%C3%B3gica%20Verde.csv.gz',
-                icon: 'fa-leaf'
-            },
-            {
-                id: 'fitgirl',
-                name: 'FitGirl Repacks',
-                csvUrl: 'https://ecofitgirl.pages.dev/FitGirl%20Repack.csv.gz',
-                icon: 'fa-gamepad'
-            },
-            {
-                id: 'gog',
-                name: 'Free PC GOG Games',
-                csvUrl: 'https://freepcgoggames.pages.dev/FreePCGOGGames.csv.gz',
-                icon: 'fa-gamepad'
-            },
-            {
-                id: 'onlinefix',
-                name: 'OnlineFixMe',
-                csvUrl: 'https://onlinefixme.pages.dev/OnlineFixMe.csv.gz',
-                icon: 'fa-wifi'
-            },
-            {
-                id: 'insaneramzes',
-                name: 'InsaneRamZes',
-                csvUrl: 'https://insaneramzes.pages.dev/InsaneRamZes.csv.gz',
-                icon: 'fa-gamepad'
-            }
-        ]
-    };
-
     const modal = document.getElementById('gameSearchModal');
     const openBtn = document.getElementById('openSearchModalBtn');
     const closeBtn = document.getElementById('closeModalBtn');
     const searchInput = document.getElementById('gameSearchInput');
     const searchBtn = document.getElementById('searchGameBtn');
     const resultsContainer = document.getElementById('searchResults');
+
+    function getCatalogsFromSourceUrls() {
+        const catalogs = [];
+        const csvFiles = {
+            'byxatab': 'ByXATAB.csv.gz',
+            'dodi': 'DODI%20Repack.csv.gz',
+            'ecologica': 'Ecol%C3%B3gica%20Verde.csv.gz',
+            'fitgirl': 'FitGirl%20Repack.csv.gz',
+            'gog': 'FreePCGOGGames.csv.gz',
+            'onlinefix': 'OnlineFixMe.csv.gz',
+            'insaneramzes': 'InsaneRamZes.csv.gz'
+        };
+        
+        const icons = {
+            'byxatab': 'fa-gamepad',
+            'dodi': 'fa-gamepad',
+            'ecologica': 'fa-leaf',
+            'fitgirl': 'fa-gamepad',
+            'gog': 'fa-gamepad',
+            'onlinefix': 'fa-wifi',
+            'insaneramzes': 'fa-gamepad'
+        };
+        
+        const names = {
+            'byxatab': 'ByXATAB',
+            'dodi': 'DODI Repacks',
+            'ecologica': 'Ecológica Verde',
+            'fitgirl': 'FitGirl Repacks',
+            'gog': 'Free PC GOG Games',
+            'onlinefix': 'OnlineFixMe',
+            'insaneramzes': 'InsaneRamZes'
+        };
+        
+        for (const [id, baseUrl] of Object.entries(CONFIG.sourceUrls)) {
+            const csvFile = csvFiles[id];
+            if (csvFile) {
+                let url = baseUrl;
+                if (!url.endsWith('/')) {
+                    url = url + '/';
+                }
+                catalogs.push({
+                    id: id,
+                    name: names[id],
+                    csvUrl: url + csvFile,
+                    icon: icons[id]
+                });
+            }
+        }
+        
+        return catalogs;
+    }
 
     if (openBtn) {
         openBtn.addEventListener('click', () => {
@@ -933,6 +937,8 @@ function setupGameSearch() {
             }
             
             const lines = csvText.split('\n');
+            if (lines.length === 0) return [];
+            
             const headers = lines[0].split(',');
             
             const nameColumnIndex = headers.findIndex(h => 
@@ -946,7 +952,7 @@ function setupGameSearch() {
             const matches = [];
             const searchTerm = gameName.toLowerCase();
             
-            for (let i = 1; i < Math.min(lines.length, 1000); i++) {
+            for (let i = 1; i < lines.length; i++) {
                 const line = lines[i].trim();
                 if (!line) continue;
                 
@@ -970,8 +976,6 @@ function setupGameSearch() {
                         matches.push(gameName_clean);
                     }
                 }
-                
-                if (matches.length >= 5) break;
             }
             
             return matches;
@@ -995,14 +999,16 @@ function setupGameSearch() {
             return;
         }
         
+        const catalogs = getCatalogsFromSourceUrls();
+        
         resultsContainer.innerHTML = `
             <div class="search-loading">
                 <div class="loading-spinner-small"></div>
-                <p>Buscando em ${SEARCH_CONFIG.catalogs.length} catálogos...</p>
+                <p>Buscando em ${catalogs.length} catálogos...</p>
             </div>
         `;
         
-        const searchPromises = SEARCH_CONFIG.catalogs.map(catalog => 
+        const searchPromises = catalogs.map(catalog => 
             searchInCatalog(catalog, gameName).then(matches => ({ catalog, matches }))
         );
         

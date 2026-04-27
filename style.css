@@ -1191,6 +1191,23 @@ body {
     overflow-y: auto;
 }
 
+.modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
 .search-input-wrapper {
     display: flex;
     gap: 12px;
@@ -1231,6 +1248,23 @@ body {
 .search-results {
     max-height: 400px;
     overflow-y: auto;
+}
+
+.search-results::-webkit-scrollbar {
+    width: 6px;
+}
+
+.search-results::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.search-results::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+.search-results::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.15);
 }
 
 .search-placeholder, .search-loading, .search-no-results {
@@ -1307,6 +1341,21 @@ body {
     list-style: none;
     padding: 8px 0;
     margin: 0;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.games-list::-webkit-scrollbar {
+    width: 4px;
+}
+
+.games-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.games-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
 }
 
 .games-list li {
