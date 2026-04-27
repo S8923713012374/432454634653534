@@ -838,43 +838,43 @@ function setupGameSearch() {
             {
                 id: 'byxatab',
                 name: 'ByXATAB',
-                csvUrl: 'https://byxatab.pages.dev/ByXATAB.csv',
+                csvUrl: 'https://byxatab.pages.dev/ByXATAB.csv.gz',
                 icon: 'fa-gamepad'
             },
             {
                 id: 'dodi',
                 name: 'DODI Repacks',
-                csvUrl: 'https://dodi.pages.dev/DODI%20Repack.csv',
+                csvUrl: 'https://dodi.pages.dev/DODI%20Repack.csv.gz',
                 icon: 'fa-gamepad'
             },
             {
                 id: 'ecologica',
                 name: 'Ecológica Verde',
-                csvUrl: 'https://ecologica2verde.pages.dev/Ecol%C3%B3gica%20Verde.csv',
+                csvUrl: 'https://ecologica2verde.pages.dev/Ecol%C3%B3gica%20Verde.csv.gz',
                 icon: 'fa-leaf'
             },
             {
                 id: 'fitgirl',
                 name: 'FitGirl Repacks',
-                csvUrl: 'https://ecofitgirl.pages.dev/FitGirl%20Repack.csv',
+                csvUrl: 'https://ecofitgirl.pages.dev/FitGirl%20Repack.csv.gz',
                 icon: 'fa-gamepad'
             },
             {
                 id: 'gog',
                 name: 'Free PC GOG Games',
-                csvUrl: 'https://freepcgoggames.pages.dev/FreePCGOGGames.csv',
+                csvUrl: 'https://freepcgoggames.pages.dev/FreePCGOGGames.csv.gz',
                 icon: 'fa-gamepad'
             },
             {
                 id: 'onlinefix',
                 name: 'OnlineFixMe',
-                csvUrl: 'https://onlinefixme.pages.dev/OnlineFixMe.csv',
+                csvUrl: 'https://onlinefixme.pages.dev/OnlineFixMe.csv.gz',
                 icon: 'fa-wifi'
             },
             {
                 id: 'insaneramzes',
                 name: 'InsaneRamZes',
-                csvUrl: 'https://insaneramzes.pages.dev/InsaneRamZes.csv',
+                csvUrl: 'https://insaneramzes.pages.dev/InsaneRamZes.csv.gz',
                 icon: 'fa-gamepad'
             }
         ]
@@ -920,7 +920,17 @@ function setupGameSearch() {
             const response = await fetch(catalog.csvUrl);
             if (!response.ok) throw new Error(`HTTP ${response.status}`);
             
-            const csvText = await response.text();
+            const arrayBuffer = await response.arrayBuffer();
+            
+            let csvText;
+            
+            if (catalog.csvUrl.endsWith('.gz')) {
+                const decompressed = pako.ungzip(new Uint8Array(arrayBuffer), { to: 'string' });
+                csvText = decompressed;
+            } else {
+                const decoder = new TextDecoder('utf-8');
+                csvText = decoder.decode(arrayBuffer);
+            }
             
             const lines = csvText.split('\n');
             const headers = lines[0].split(',');
@@ -936,7 +946,7 @@ function setupGameSearch() {
             const matches = [];
             const searchTerm = gameName.toLowerCase();
             
-            for (let i = 1; i < lines.length; i++) {
+            for (let i = 1; i < Math.min(lines.length, 1000); i++) {
                 const line = lines[i].trim();
                 if (!line) continue;
                 
@@ -956,7 +966,9 @@ function setupGameSearch() {
                 const gameName_clean = gameName_raw.replace(/^"|"$/g, '').trim();
                 
                 if (gameName_clean.toLowerCase().includes(searchTerm)) {
-                    matches.push(gameName_clean);
+                    if (!matches.includes(gameName_clean)) {
+                        matches.push(gameName_clean);
+                    }
                 }
                 
                 if (matches.length >= 5) break;
